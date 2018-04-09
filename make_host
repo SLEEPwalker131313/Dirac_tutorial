@@ -1,0 +1,37 @@
+#!/bin/bash 
+######################################################
+#
+#  Generate a host certificate using a CA certificate
+#  cacert/pem/cakey.pem
+#
+#  Usage:
+#     make_host <host_name>
+#
+######################################################
+
+host_name=$1
+
+openssl genrsa -out hostkey.pem 2048 
+
+cat > openssl_config_host << EOD
+[ req ]
+default_bits           = 1024
+encrypt_key            = yes
+distinguished_name     = req_dn
+prompt                 = no
+
+[ req_dn ]
+C                      = ch
+O                      = DIRAC
+OU                     = DIRAC Consortium
+CN                     = $host_name
+emailAddress           = dirac_admin@diracgrid.org
+EOD
+
+openssl req -key hostkey.pem -new -out host.req -config openssl_config_host
+echo 00 > file.srl
+openssl x509 -req -in host.req -CA cacert.pem -CAkey cakey.pem  -CAserial file.srl -days 365 -out hostcert.pem
+
+chmod 600 hostkey.pem
+rm openssl_config_host
+rm host.req

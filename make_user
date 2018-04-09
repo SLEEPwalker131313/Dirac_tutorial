@@ -1,0 +1,41 @@
+#!/bin/bash 
+###############################################################
+#
+#  Usage:
+#    make_user <user_full_name> <e-mail>
+#
+###############################################################
+
+user_name=$1
+email=$2
+
+openssl genrsa -out userkey.pem 2048 
+
+cat > openssl_config_user << EOD
+[ req ]
+default_bits           = 1024
+encrypt_key            = yes
+distinguished_name     = req_dn
+prompt                 = no
+
+[ req_dn ]
+C                      = ch
+O                      = DIRAC
+OU                     = DIRAC Consortium
+CN                     = $user_name
+emailAddress           = $email
+
+EOD
+
+openssl req -key userkey.pem -new -out user.req -config openssl_config_user
+echo 01 > file.srl
+openssl x509 -req -in user.req -CA cacert.pem -CAkey cakey.pem  -CAserial file.srl -days 365 -out usercert.pem
+chmod 600 userkey.pem
+
+echo Certificate `openssl x509 -in usercert.pem -noout -subject`
+
+# Create certificate in p12 form
+openssl pkcs12 -export -inkey userkey.pem  -in usercert.pem -name dirac_user -out usercert.p12
+
+rm openssl_config_user file.srl
+rm user.req

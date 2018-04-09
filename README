@@ -1,0 +1,41 @@
+Prepare host
+============
+
+1. Remove /etc/my.cnf to use DIRAC provided MySQL server
+2. Prepare iptables rules
+
+iptables -I INPUT -p tcp --dport 9130:9200 -j ACCEPT
+iptables -t nat -I PREROUTING -p tcp --dport 80 -j REDIRECT --to-ports 8080
+iptables -t nat -I PREROUTING -p tcp --dport 443 -j REDIRECT --to-ports 8443
+service iptables save
+
+
+Installation of the Grid certificates
+======================================
+
+Add EGI-trustanchors.repo file to /etc/yum.repos.d directory
+
+Run:
+
+> yum -y install lcg-CA
+
+> cp /etc/grid-security/certificates /opt/dirac/etc/grid-security
+
+Generation of the DIRAC CA, host and user certificates
+=======================================================
+
+1. make_CA - generate DIRAC CA certificate
+2. make_host <host_name> - generate host certificate with the DIRAC CA
+3. make_user <Full Name> <email> - generate user certificate with the DIRAC CA
+
+Install DIRAC services
+=======================
+
+> install_site install_XXX.cfg
+
+Installation configuration files:
+
+install_minimal.cfg - minimal set of services to start with
+install_framework.cfg - minimal set plus framework services
+install_wms.cfg - all above plus WMS services
+install_full.cfg - almost a complete set of services

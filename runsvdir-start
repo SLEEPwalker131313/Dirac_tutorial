@@ -1,0 +1,13 @@
+#!/bin/bash
+source /opt/dirac/bashrc
+RUNSVCTRL=`which runsvctrl`
+chpst -u dirac $RUNSVCTRL d /opt/dirac/startup/*
+killall runsv svlogd
+killall runsvdir
+/opt/dirac/pro/mysql/share/mysql/mysql.server stop  --user=dirac
+sleep 10
+/opt/dirac/pro/mysql/share/mysql/mysql.server start --user=dirac
+sleep 20
+RUNSVDIR=`which runsvdir`
+exec chpst -u dirac $RUNSVDIR -P /opt/dirac/startup 'log:  DIRAC runsv'
+

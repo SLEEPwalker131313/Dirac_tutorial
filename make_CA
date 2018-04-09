@@ -1,0 +1,39 @@
+#!/bin/bash
+#######################################################
+#
+#  Generate a self-signed certificate that can be used 
+#  as a CA certificate
+#
+#  Usage:
+#    make_CA
+#
+#######################################################
+
+openssl genrsa -out cakey.pem 2048 
+
+cat > openssl_config_CA <<EOF
+[ req ]
+default_bits           = 1024
+encrypt_key            = yes
+distinguished_name     = req_dn
+prompt                 = no
+x509_extensions        = v3_ca
+
+[ req_dn ]
+C                      = ch
+O                      = DIRAC
+CN                     = DIRAC Cerification Authority
+emailAddress           = dirac_ca@diracgrid.org
+
+[ v3_ca ]
+subjectKeyIdentifier   = hash
+authorityKeyIdentifier = keyid:always
+basicConstraints       = CA:true
+EOF
+
+openssl req -new -x509 -key cakey.pem -out cacert.pem -days 1825 -config openssl_config_CA
+
+hash=`openssl x509 -in cacert.pem -noout -hash`
+ln -s cacert.pem $hash.0
+ 
+rm openssl_config_CA
